@@ -44,18 +44,13 @@ public class MainApp {
             mainFrame.add(tabbedPane);
             mainFrame.setVisible(true);
 
-            // Update tracking data every time the Jadwal tab is selected
             tabbedPane.addChangeListener(e -> {
-                if (tabbedPane.getSelectedComponent() == jadwalView) {
-                    List<String[]> jadwalData = jadwalModel.getAllJadwal();
-                    trackingView.updateArmadaLocations(jadwalData);
-                    trackingView.updateJadwalLocations(jadwalData);
-                }
+                List<String[]> jadwalData = jadwalModel.getAllJadwal();
 
-                if (tabbedPane.getSelectedComponent() == trackingView) {
-                    List<String[]> jadwalData = jadwalModel.getAllJadwal();
-                    trackingView.updateArmadaLocations(jadwalData);
-                    trackingView.updateJadwalLocations(jadwalData);
+                if (tabbedPane.getSelectedComponent() == jadwalView
+                        || tabbedPane.getSelectedComponent() == trackingView) {
+                    trackingView.updateArmadaData(jadwalData);
+                    trackingView.updateJadwalData(jadwalData);
                 }
             });
         });
