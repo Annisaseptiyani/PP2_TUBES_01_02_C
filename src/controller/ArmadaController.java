@@ -1,148 +1,145 @@
-// src/controller/ArmadaController.java
 package controller;
 
-import model.ArmadaModel;
+import model.Armada;
+import model.ArmadaMapper;
+
+import org.apache.ibatis.session.SqlSession;
+
+import util.MyBatisUtil;
 import view.ArmadaView;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.List;
 
 public class ArmadaController {
-    private ArmadaView view;
-    private ArmadaModel model;
-    private DefaultTableModel tableModel;
+    private final ArmadaView view;
+    private final DefaultTableModel tableModel;
 
-    public ArmadaController(ArmadaView view, ArmadaModel model) {
+    public ArmadaController(ArmadaView view) {
         this.view = view;
-        this.model = model;
         this.tableModel = (DefaultTableModel) view.table.getModel();
-        this.initialize();
-        updateTable(); // Load the table data on initialization
+        initialize();
+        updateTable();
     }
 
-    public void initialize() {
-        // Tambah Action Listener untuk tombol Tambah
-        view.btnTambah.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String nomorKendaraan = view.textNomorKendaraan.getText();
-                String tipeKendaraan = (String) view.comboTipeKendaraan.getSelectedItem();
-                String kapasitas = (String) view.comboKapasitas.getSelectedItem();
-
-                if (nomorKendaraan.isEmpty()) {
-                    JOptionPane.showMessageDialog(view, "Nomor Kendaraan harus diisi!", "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                // Panggil model untuk menambah data ke database
-                boolean isAdded = model.addArmada(nomorKendaraan, tipeKendaraan, Integer.parseInt(kapasitas));
-                if (isAdded) {
-                    updateTable();
-                    JOptionPane.showMessageDialog(view, "Data Armada berhasil ditambahkan!");
-                } else {
-                    JOptionPane.showMessageDialog(view, "Terjadi kesalahan saat menambahkan data Armada!", "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
-
-        // Tambah Action Listener untuk tombol Update
-        view.btnUpdate.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                int selectedRow = view.table.getSelectedRow();
-                if (selectedRow == -1) {
-                    JOptionPane.showMessageDialog(view, "Pilih baris untuk diupdate.", "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                String nomorKendaraan = view.textNomorKendaraan.getText();
-                String tipeKendaraan = (String) view.comboTipeKendaraan.getSelectedItem();
-                String kapasitas = (String) view.comboKapasitas.getSelectedItem();
-                int id = Integer.parseInt(view.table.getValueAt(selectedRow, 0).toString());
-
-                // Panggil model untuk update data armada
-                boolean isUpdated = model.updateArmada(id, nomorKendaraan, tipeKendaraan, Integer.parseInt(kapasitas));
-                if (isUpdated) {
-                    updateTable();
-                    JOptionPane.showMessageDialog(view, "Data Armada berhasil diupdate!");
-                } else {
-                    JOptionPane.showMessageDialog(view, "Terjadi kesalahan saat mengupdate data Armada!", "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
-
-        // Tambah Action Listener untuk tombol Delete
-        view.btnDelete.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                int selectedRow = view.table.getSelectedRow();
-                if (selectedRow == -1) {
-                    JOptionPane.showMessageDialog(view, "Pilih baris untuk dihapus.", "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-
-                int id = Integer.parseInt(view.table.getValueAt(selectedRow, 0).toString());
-
-                // Panggil model untuk menghapus data armada
-                boolean isDeleted = model.deleteArmada(id);
-                if (isDeleted) {
-                    updateTable();
-                    JOptionPane.showMessageDialog(view, "Data Armada berhasil dihapus!");
-                } else {
-                    JOptionPane.showMessageDialog(view, "Terjadi kesalahan saat menghapus data Armada!", "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
-
-        // Tambah Action Listener untuk tombol Cari
-        view.btnCari.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String cariTipe = view.textCari.getText().toLowerCase();
-                List<String[]> hasilCari = model.getAllArmada(cariTipe);
-                updateTableWithSearchResults(hasilCari);
-            }
-        });
+    private void initialize() {
+        view.btnTambah.addActionListener(e -> tambahArmada());
+        view.btnUpdate.addActionListener(e -> updateArmada());
+        view.btnDelete.addActionListener(e -> deleteArmada());
+        view.btnCari.addActionListener(e -> cariArmada());
     }
 
-    // Fungsi untuk mengupdate tabel
+    private void tambahArmada() {
+        try (SqlSession session = MyBatisUtil.getSqlSessionFactory().openSession()) {
+            ArmadaMapper mapper = session.getMapper(ArmadaMapper.class);
+
+            String nomorKendaraan = view.textNomorKendaraan.getText();
+            String tipeKendaraan = (String) view.comboTipeKendaraan.getSelectedItem();
+            int kapasitas = Integer.parseInt((String) view.comboKapasitas.getSelectedItem());
+
+            Armada armada = new Armada(nomorKendaraan, tipeKendaraan, kapasitas);
+            int result = mapper.addArmada(armada);
+
+            if (result > 0) {
+                session.commit();
+                updateTable();
+                JOptionPane.showMessageDialog(view, "Armada berhasil ditambahkan!");
+            } else {
+                showError("Gagal menambahkan armada!");
+            }
+        } catch (Exception ex) {
+            showError(ex.getMessage());
+        }
+    }
+
+    private void updateArmada() {
+        try (SqlSession session = MyBatisUtil.getSqlSessionFactory().openSession()) {
+            ArmadaMapper mapper = session.getMapper(ArmadaMapper.class);
+
+            int selectedRow = view.table.getSelectedRow();
+            if (selectedRow == -1) {
+                showError("Pilih data yang akan diupdate!");
+                return;
+            }
+
+            int id = (int) tableModel.getValueAt(selectedRow, 0);
+            String nomorKendaraan = view.textNomorKendaraan.getText();
+            String tipeKendaraan = (String) view.comboTipeKendaraan.getSelectedItem();
+            int kapasitas = Integer.parseInt((String) view.comboKapasitas.getSelectedItem());
+
+            Armada armada = new Armada(id, nomorKendaraan, tipeKendaraan, kapasitas);
+            int result = mapper.updateArmada(armada);
+
+            if (result > 0) {
+                session.commit();
+                updateTable();
+                JOptionPane.showMessageDialog(view, "Armada berhasil diupdate!");
+            } else {
+                showError("Gagal mengupdate armada!");
+            }
+        } catch (Exception ex) {
+            showError(ex.getMessage());
+        }
+    }
+
+    private void deleteArmada() {
+        try (SqlSession session = MyBatisUtil.getSqlSessionFactory().openSession()) {
+            ArmadaMapper mapper = session.getMapper(ArmadaMapper.class);
+
+            int selectedRow = view.table.getSelectedRow();
+            if (selectedRow == -1) {
+                showError("Pilih data yang akan dihapus!");
+                return;
+            }
+
+            int id = (int) tableModel.getValueAt(selectedRow, 0);
+            int result = mapper.deleteArmada(id);
+
+            if (result > 0) {
+                session.commit();
+                updateTable();
+                JOptionPane.showMessageDialog(view, "Armada berhasil dihapus!");
+            } else {
+                showError("Gagal menghapus armada!");
+            }
+        } catch (Exception ex) {
+            showError(ex.getMessage());
+        }
+    }
+
+    private void cariArmada() {
+        String filter = view.textCari.getText();
+        updateTable(filter);
+    }
+
     private void updateTable() {
-        List<String[]> armadaList = model.getAllArmada(null); // Ambil semua data armada
-        tableModel.setRowCount(0); // Clear existing data in the table
+        updateTable(null);
+    }
 
-        // Loop through the armadaList and add rows to the table
-        for (int i = 0; i < armadaList.size(); i++) {
-            String[] armada = armadaList.get(i);
-            tableModel.addRow(new Object[] {
-                    armada[0], // ID
-                    armada[1], // Nomor Kendaraan
-                    armada[2], // Tipe Kendaraan
-                    armada[3] // Kapasitas
-            });
+    private void updateTable(String filter) {
+        try (SqlSession session = MyBatisUtil.getSqlSessionFactory().openSession()) {
+            ArmadaMapper mapper = session.getMapper(ArmadaMapper.class);
+            List<Armada> armadaList = (filter == null || filter.isEmpty())
+                    ? mapper.getAllArmada()
+                    : mapper.getAllArmadaByFilter(filter);
+
+            tableModel.setRowCount(0);
+
+            for (Armada armada : armadaList) {
+                tableModel.addRow(new Object[]{
+                        armada.getId(),
+                        armada.getNomorKendaraan(),
+                        armada.getTipeKendaraan(),
+                        armada.getKapasitas()
+                });
+            }
+        } catch (Exception ex) {
+            showError(ex.getMessage());
         }
     }
 
-    // Fungsi untuk mengupdate tabel dengan hasil pencarian
-    private void updateTableWithSearchResults(List<String[]> hasilCari) {
-        tableModel.setRowCount(0); // Clear existing data in the table
-
-        // Loop through the search results and add rows to the table
-        for (int i = 0; i < hasilCari.size(); i++) {
-            String[] armada = hasilCari.get(i);
-            tableModel.addRow(new Object[] {
-                    armada[0], // ID
-                    armada[1], // Nomor Kendaraan
-                    armada[2], // Tipe Kendaraan
-                    armada[3] // Kapasitas
-            });
-        }
+    private void showError(String message) {
+        JOptionPane.showMessageDialog(view, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
 }

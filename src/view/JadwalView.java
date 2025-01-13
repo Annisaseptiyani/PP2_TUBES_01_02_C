@@ -1,4 +1,3 @@
-// src/view/JadwalView.java
 package view;
 
 import javax.swing.*;
@@ -7,7 +6,6 @@ import java.awt.*;
 
 public class JadwalView extends JPanel {
     public JTextField textNama, textTanggal, textLokasi;
-    public JComboBox<String> comboArmada, comboPemesan;
     public JButton btnTambah, btnUpdate, btnDelete;
     public JTable table;
     public DefaultTableModel tableModel;
@@ -19,48 +17,35 @@ public class JadwalView extends JPanel {
         // Panel Input
         JPanel inputPanel = new JPanel();
         inputPanel.setLayout(new BoxLayout(inputPanel, BoxLayout.Y_AXIS));
+        inputPanel.setBorder(BorderFactory.createTitledBorder("Input Jadwal"));
 
         // Panel Nama
         JPanel namaPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         namaPanel.add(new JLabel("Nama:"));
-        textNama = new JTextField(15);
+        textNama = new JTextField(20);
         namaPanel.add(textNama);
         inputPanel.add(namaPanel);
 
         // Panel Tanggal
         JPanel tanggalPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         tanggalPanel.add(new JLabel("Tanggal (YYYY-MM-DD):"));
-        textTanggal = new JTextField(15);
+        textTanggal = new JTextField(20);
         tanggalPanel.add(textTanggal);
         inputPanel.add(tanggalPanel);
 
         // Panel Lokasi
         JPanel lokasiPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         lokasiPanel.add(new JLabel("Lokasi:"));
-        textLokasi = new JTextField(15);
+        textLokasi = new JTextField(20);
         lokasiPanel.add(textLokasi);
         inputPanel.add(lokasiPanel);
-
-        // Panel Armada
-        JPanel armadaPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        armadaPanel.add(new JLabel("Armada:"));
-        comboArmada = new JComboBox<>();
-        armadaPanel.add(comboArmada);
-        inputPanel.add(armadaPanel);
-
-        // Panel Pemesan
-        JPanel pemesanPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        pemesanPanel.add(new JLabel("Pemesan:"));
-        comboPemesan = new JComboBox<>();
-        pemesanPanel.add(comboPemesan);
-        inputPanel.add(pemesanPanel);
 
         // Panel Button
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         btnTambah = new JButton("Tambah");
         btnUpdate = new JButton("Update");
         btnDelete = new JButton("Delete");
-
+        
         buttonPanel.add(btnTambah);
         buttonPanel.add(btnUpdate);
         buttonPanel.add(btnDelete);
@@ -69,11 +54,12 @@ public class JadwalView extends JPanel {
         add(inputPanel, BorderLayout.NORTH);
 
         // Tabel Setup
-        tableModel = new DefaultTableModel(
-                new String[] { "ID", "Nama", "Tanggal", "Lokasi", "Nomor Kendaraan", "Armada", "Pemesan" }, 0);
+        tableModel = new DefaultTableModel(new String[]{"ID", "Nama", "Tanggal", "Lokasi"}, 0);
         table = new JTable(tableModel);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setRowHeight(30);
-        add(new JScrollPane(table), BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Data Jadwal"));
+        add(scrollPane, BorderLayout.CENTER);
     }
 }
