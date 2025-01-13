@@ -6,7 +6,7 @@ public class Jadwal {
     private String tanggal;
     private String lokasi;
 
-    // Constructor
+
     public Jadwal(int id, String nama, String tanggal, String lokasi) {
         this.id = id;
         this.nama = nama;
@@ -14,14 +14,13 @@ public class Jadwal {
         this.lokasi = lokasi;
     }
 
-    // Overloaded constructor for new entries without ID
     public Jadwal(String nama, String tanggal, String lokasi) {
         this.nama = nama;
         this.tanggal = tanggal;
         this.lokasi = lokasi;
     }
 
-    // Getters and Setters
+
     public int getId() {
         return id;
     }

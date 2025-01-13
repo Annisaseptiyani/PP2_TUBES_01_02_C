@@ -13,7 +13,6 @@ public class MyBatisUtil {
 
     static {
         try {
-            // Membaca file konfigurasi MyBatis dari resource folder
             Reader reader = Resources.getResourceAsReader("mybatis-config.xml");
             sqlSessionFactory = new SqlSessionFactoryBuilder().build(reader);
         } catch (IOException e) {

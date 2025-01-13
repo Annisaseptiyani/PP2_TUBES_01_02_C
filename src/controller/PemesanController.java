@@ -11,8 +11,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 
-import javax.swing.JFrame;
-
 public class PemesanController {
     private PemesanView view;
 
@@ -150,15 +148,4 @@ public class PemesanController {
             }
         }
     }
-
-        public static void main(String[] args) {
-        PemesanView view = new PemesanView();
-        new PemesanController(view);
-        JFrame testFrame = new JFrame("Test Pemesan");
-        testFrame.setContentPane(view);
-        testFrame.setSize(400, 300);
-        testFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        testFrame.setVisible(true);
-    }
-
 }
